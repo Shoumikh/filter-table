@@ -11,12 +11,12 @@ import Stack from '@mui/material/Stack';
 import axios from 'axios';
 
 const columns = [
-    { field: 'name', headerName: 'Name', width: 130 },
-    { field: 'email', headerName: 'Email', width: 160 },
-    { field: 'foundedOn', headerName: 'Founded On', width: 120 },
-    { field: 'industry', headerName: 'Industry', width: 120 },
-    { field: 'location', headerName: 'Location', width: 120 },
-    { field: 'Type', headerName: 'Type', width: 120 },
+    { field: 'company_name', headerName: 'Name', width: 130 },
+    { field: 'company_email', headerName: 'Email', width: 160 },
+    { field: 'founded_on', headerName: 'Founded On', width: 120 },
+    { field: 'company_industry', headerName: 'Industry', width: 120 },
+    { field: 'company_location', headerName: 'Location', width: 120 },
+    { field: 'company_type', headerName: 'Type', width: 120 },
     // {
     //   field: 'fullName',
     //   headerName: 'Full name',
@@ -28,21 +28,23 @@ const columns = [
     // },
   ];
 
-  const rows = [
-    { id: 1, name: 'Snow White', email: 'snow@gmail.com', foundedOn: 1992, industry: 2, location: "DA", Type:"Jilla", firstName: 'Jon', age: 35 },
-    { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-    { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-    { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-    { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-    { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-    { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-    { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-    { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
+  let rows = [
+    // { id: 1, name: 'Snow White', email: 'snow@gmail.com', foundedOn: 1992, industry: 2, location: "DA", Type:"Jilla", firstName: 'Jon', age: 35 },
+    // { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
+    // { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
+    // { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
+    // { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
+    // { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
+    // { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
+    // { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
+    // { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
   ];
 
 function FilterTable() {
 
-    const [locations, setLocations] = useState("");
+    const [locations, setLocations] = useState([]);
+    const [companies, setCompanies] = useState([]);
+
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -52,24 +54,41 @@ function FilterTable() {
 
 
     useEffect(() => {
+        importIndustries();
+        importCompanies();
         importLocations();
-      }, []);
+      },[locations.length, companies.length]);
 
-      
-    const importLocations = async () => {
-        setLoading(true);
 
-        try {
-            const result = await axios.get(
-              "https://faker-companies.dk-dev.leadbook.com/api/v1/industries/?format=json", {mode: 'no-cors'}
-            );
-            setLocations(result.data);
-            console.log("Dataaa: ", result.data);
-          } catch (err) {
-            setError(err.message || "Unexpected Error!");
-          } finally {
-            setLoading(false);
-          }
+    const importIndustries = () =>{
+        const result = axios.get(`/industries/?format=json`)
+        .then(res => {
+          setLocations(res.data);
+        })
+        console.log("loc", locations);
+    }
+
+
+    const importCompanies = () => {
+        axios.get(`/companies/?format=json`)
+        .then(res => {
+          setCompanies(res.data);
+        })
+        console.log("COm", companies.results);
+
+        //  mat table rows data insert
+        if(companies.results){
+            rows = companies.results;
+        }
+    }
+
+    const importLocations = () => {
+        if(companies.results){
+            companies.results.map((c) => {
+
+            })
+        }
+
     }
 
     const handleLocationChange = (event) => {
@@ -78,6 +97,15 @@ function FilterTable() {
 
     const handleIndustryChange = (event) => {
         setIndustry(event.target.value);
+
+        axios.get(`/companies/?format=json`,{ params: { company_industry: event.target.value } })
+        .then(res => {
+          setCompanies(res.data);
+        })
+        console.log("COm", companies.results);
+        if(companies.results){
+            rows = companies.results;
+        }
     };
 
 
@@ -99,10 +127,15 @@ function FilterTable() {
                 <h2>Build A List</h2>
             </div>
             <div className='header__right' >
-                <p> 0 companies found </p>
+                <p> {companies.results ? companies.results.length : 0} companies found </p>
             </div>
         </div>
 
+        {/*
+        **
+        *****   Location DropDown Starts 
+        **
+        */}
         <div className='table__contianer'>
             <div className='table__left'>
             <div className='dropdown'>
@@ -121,7 +154,17 @@ function FilterTable() {
                     </Select>
                 </FormControl>
             </div>
+        {/*
+        **
+        *****   Location DropDown Ends 
+        **
+        */}
 
+        {/*
+        **
+        *****   Industry DropDown Starts 
+        **
+        */}
             <div className='dropdown'>
                 <FormControl fullWidth>
                     <InputLabel id="demo-simple-select-label">Industry</InputLabel>
@@ -132,15 +175,26 @@ function FilterTable() {
                         label="Industry"
                         onChange={handleIndustryChange}
                     >
-                    <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem>
+                        {Object.values(locations)?.map((loc, index) => { 
+                            return (
+                                <MenuItem  key={index} value={index}>{loc}</MenuItem>
+                            )}) 
+                        };
                     </Select>
                 </FormControl>
             </div>
-
+        {/*
+        **
+        *****  Location DropDown Ends
+        **
+        */}
             </div>
             <div className='table__right'>
+                {/*
+                    **
+                    *****   Included Tags Starts
+                    **
+                */}
                 <div className="table__tags">
                     <p>Includued</p>
                     <div className=''>
@@ -150,22 +204,24 @@ function FilterTable() {
                     </Stack>
                     </div>
                 </div>
-                {/* mat ui table */}
-                <div style={{ height: 400, width: '100%' }}>
-                    <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
-                    checkboxSelection
-                    />
+                {/*
+                    **
+                    *****   Included Tags Starts
+                    **
+                */}
+                {/*mat ui table */}
+                <div style={{ height: 700, width: '100%' }}>
+                            <DataGrid
+                                rows= { rows }
+                                columns={columns}
+                                pageSize={10}
+                                rowsPerPageOptions={[10]}
+                                checkboxSelection
+                                getRowId={(row) => row._id}
+                            />
                 </div>
             </div>
-
         </div>
-
-
-
     </div>
   )
 }

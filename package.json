@@ -42,6 +42,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy" : "https://faker-companies.dk-dev.leadbook.com/api/v1/"
+  "proxy" : "https://faker-companies.dk-dev.leadbook.com/api/v1"
 
 }
